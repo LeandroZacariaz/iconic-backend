@@ -4,6 +4,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -18,7 +19,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class JwtServiceImpl implements JwtService {
 
-    private static final String SECRET_KEY = "A3F5E9D1C6B4A1D2F8E8C5E2A3C7D8B1A9D6E8F4B2C9D5F6E8D3A4C1E7F9B1";
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
 
     private Key getKey() {
         byte[] keyBytes = (byte[])Decoders.BASE64.decode(SECRET_KEY);

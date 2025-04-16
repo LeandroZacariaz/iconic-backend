@@ -4,6 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ecommerce.product_catalog_service.domain.Product;
@@ -25,6 +27,9 @@ public class ProductServiceImpl implements ProductService {
     private ProductRepository productRepository;
     private CategoryRepository categoryRepository;
 
+    @Value("${file.upload-dir:/app/static/images}") // Ruta predeterminada, configurable en Railway
+    private String uploadDir;
+    
     @Override
     public ProductDto createProduct(ProductCreateMultipartDto productCreateDto) {
         Product product = new Product();
@@ -39,8 +44,7 @@ public class ProductServiceImpl implements ProductService {
         if (productCreateDto.image() != null && !productCreateDto.image().isEmpty()) {
             try {
                 String fileName = System.currentTimeMillis() + "_" + productCreateDto.image().getOriginalFilename();
-                // Usar una carpeta externa para evitar problemas con el classpath
-                Path filePath = Paths.get("static/images/" + fileName);
+                Path filePath = Paths.get(uploadDir, fileName);
                 Files.createDirectories(filePath.getParent());
                 Files.write(filePath, productCreateDto.image().getBytes());
                 product.setImage("/images/" + fileName);
@@ -67,11 +71,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto updateProduct(Long id_product, ProductCreateMultipartDto productCreateDto) {
-        // Buscar el producto existente
         Product product = productRepository.findById(id_product)
             .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id_product));
 
-        // Actualizar los campos del producto
         product.setName(productCreateDto.name());
         product.setDescription(productCreateDto.description());
         product.setPrice(productCreateDto.price());
@@ -83,8 +85,7 @@ public class ProductServiceImpl implements ProductService {
         if (productCreateDto.image() != null && !productCreateDto.image().isEmpty()) {
             try {
                 String fileName = System.currentTimeMillis() + "_" + productCreateDto.image().getOriginalFilename();
-                // Usar una carpeta externa para evitar problemas con el classpath
-                Path filePath = Paths.get("static/images/" + fileName);
+                Path filePath = Paths.get(uploadDir, fileName);
                 Files.createDirectories(filePath.getParent());
                 Files.write(filePath, productCreateDto.image().getBytes());
                 product.setImage("/images/" + fileName);
@@ -93,7 +94,6 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
-        // Guardar el producto actualizado
         Product updatedProduct = productRepository.save(product);
         return productMapper.productToProductDto(updatedProduct);
     }
